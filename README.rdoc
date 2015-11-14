@@ -4,7 +4,7 @@
 TicTacToe
 
 == How to setup:
-** Ruby 2.2.0
-** bundle install
-** bundle exec rake db:setup
-** Bundle exec rake spec
+1. Ruby 2.2.0
+2. bundle install
+3. bundle exec rake db:setup
+4. Bundle exec rake spec
