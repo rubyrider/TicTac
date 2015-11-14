@@ -1,4 +1,5 @@
 class Board < ActiveRecord::Base
+  
   belongs_to :game
 
   # To collect value for diagonals positions
