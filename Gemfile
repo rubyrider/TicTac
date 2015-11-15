@@ -46,3 +46,11 @@ group :development, :test do
   gem 'factory_girl'
 end
 
+gem 'twitter-bootstrap-rails'
+gem 'therubyracer'
+gem 'less-rails'
+
+source 'https://rails-assets.org' do
+  gem 'rails-assets-underscore'
+end
+

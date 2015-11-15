@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151115110435) do
+ActiveRecord::Schema.define(version: 20151115215711) do
 
   create_table "boards", force: :cascade do |t|
     t.integer  "r1_c1"
@@ -61,5 +61,20 @@ ActiveRecord::Schema.define(version: 20151115110435) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
+
+  create_table "point_tables", force: :cascade do |t|
+    t.integer  "game_id"
+    t.datetime "started_at"
+    t.integer  "winner_id"
+    t.string   "result"
+    t.datetime "ended_at"
+    t.datetime "created_at",                  null: false
+    t.datetime "updated_at",                  null: false
+    t.integer  "looser_id"
+    t.integer  "remaining_moves", default: 0
+  end
+
+  add_index "point_tables", ["looser_id"], name: "index_point_tables_on_looser_id"
+  add_index "point_tables", ["winner_id"], name: "index_point_tables_on_winner_id"
 
 end

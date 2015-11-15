@@ -1,0 +1,75 @@
+<div class="col-xs-12">
+  <div class="alert alert-info">
+    Match: <%= @game.player.name %> VS <%= @game.opponent.name %>
+  </div>
+  <div class="alert alert-warning">
+    Current Turn: <%= @game.current_mover.name %>
+  </div>
+  <br>
+  <% 1.upto(3).each do |row| %>
+      <% 1.upto(3).each do |col| %>
+          <div class="col-xs-4 cell">
+            <% if @game.board.get_cell_value(row, col) %>
+                <%= @game.board.get_cell_value(row, col) %>
+            <% else %>
+                <%= form_for(@game, url: move_game_path, method: :post, as: :move) do |f| %>
+                    <%= f.hidden_field :y_axis, value: row %>
+                    <%= f.hidden_field :x_axis, value: col %>
+                    <%= f.submit 'Select', class: 'btn btn-primary' %>
+                <% end %>
+            <% end %>
+          </div>
+      <% end %>
+  <% end %>
+</div>
+
+<%= content_for :moves do %>
+    <h4><span class="label label-info">
+        <i class="glyphicon glyphicon-bell"></i>
+      <%= @game.current_status %></span>
+    </h4>
+    <% if !@game.started? %>
+        <%= link_to 'Start Now!', start_game_path, class: 'btn btn-warning' %>
+    <% end %>
+    <br>
+    <div class="panel panel-default">
+      <div class="page-header">
+        <h5 class="panel-heading">Move History (<%= @game.board.moves.count %>)</h5>
+
+        <p class="panel-heading">Move Available (<%= @game.board.total_available_moves %>)</p>
+      </div>
+      <div class="panel-body">
+        <table class="table table-borderedd">
+          <tr>
+            <td>Round#</td>
+            <td>Winner</td>
+            <td>Looser</td>
+            <td>Result</td>
+          </tr>
+
+          <% @game.point_tables.each_with_index do |point_table, i| %>
+              <tr>
+                <td>
+                  <%= i.next %>
+                </td>
+                <td>
+                  <%= point_table.winner.try(:name) || '-' %>&nbsp;(<%= point_table.winner.try(:id) || '-' %>)
+                </td>
+                <td>
+                  <%= point_table.looser.try(:name) || '-' %>
+                </td>
+                <td>
+                  <%= point_table.result || '-' %>
+                </td>
+              </tr>
+          <% end %>
+        </table>
+      </div>
+    </div>
+<% end %>
+<div class="clearfix2"></div>
+
+<div class="col-xs-12">
+  <%= link_to 'Back', games_path, class: 'btn btn-default' %>
+  <%= link_to 'Abandon', games_path, class: 'btn btn-default' %>
+</div>

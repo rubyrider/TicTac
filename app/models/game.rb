@@ -11,33 +11,59 @@ class Game < ActiveRecord::Base
   # opponent reference
   belongs_to :opponent, class_name: 'Player', foreign_key: :opponent_id
   # board for a game
-  has_one :board
+  has_one :board, dependent: :destroy
+  # leaderboard
+  has_many :point_tables, dependent: :destroy
 
-  validates :player_id, :opponent_id, :presence => true
+  validates :player_id, :opponent_id, :presence => true, on: :update
+  validates :status, presence: true, numericality: true
 
   after_create :setup_game_board
+
+  accepts_nested_attributes_for :player
+  accepts_nested_attributes_for :opponent
+
+  # To perform the move on the board
+  #
+  # @return [Boolean] true/false, if move successful
+  def move(move = {})
+    begin
+      move!(move)
+    rescue => e
+      errors.add :base, e.message
+      return false
+    end
+  end
+
 
   # To perform the move on the board
   #
   # @return [Boolean] true/false, if move successful
   def move!(move = {})
-    raise GameNotStarted, 'This game is not running' unless started?
+    raise GameNotStarted, 'this game is not running' unless started?
 
-    raise InvalidPlayerMove, 'This player is not authorized for this move' unless move_valid_for?(move.fetch(:player_id))
+    raise InvalidPlayerMove, 'this player is not authorized for this move' unless move_valid_for?(current_mover.id)
 
-    if board.move!(move.fetch(:y_axis), move.fetch(:x_axis), move.fetch(:player_id))
+    if board.move!(move.fetch(:y_axis).to_i, move.fetch(:x_axis).to_i, current_mover.id)
       self.board.moves.create!(move)
 
-      update_column(:last_player_id, move.fetch(:player_id))
+      update_columns({last_player_id: current_mover.id})
     else
       return false
     end
+
+    # checking out for possible result!
+    game_over?
 
     true
   end
 
   # To response game data as json
-  def as_json
+  def as_json(options = nil)
+    game_data
+  end
+
+  def game_data
     {
         id:            self.id,
         player:        self.player,
@@ -59,7 +85,7 @@ class Game < ActiveRecord::Base
   #
   # @return [Player]
   def last_mover
-      Player.find(self.last_player_id) if last_player_id.present?
+    Player.find(self.last_player_id) if last_player_id.present?
   end
 
   def winner
@@ -75,7 +101,7 @@ class Game < ActiveRecord::Base
   # @return [Player] player who can make the next move
   def next_mover
     # if no move has made yet!
-    return [player, opponent].sample unless last_player_id.present?
+    return player unless last_player_id.present?
     # if opponent was not the last mover
     return opponent if last_mover != opponent
 
@@ -83,6 +109,7 @@ class Game < ActiveRecord::Base
     player if last_mover != player
   end
 
+  alias_method :current_mover, :next_mover
   # To get current game status
   #
   # @return [String] Statement of game's
@@ -102,6 +129,17 @@ class Game < ActiveRecord::Base
     end
   end
 
+  def start
+    begin
+      start!
+      board.reset_board!
+      board.moves.delete_all
+    rescue => e
+      errors.add :base, e.message
+
+      return false
+    end
+  end
 
   # To start the game
   #
@@ -127,10 +165,12 @@ class Game < ActiveRecord::Base
   def abandoned!
     return true if abandoned?
 
-    {
-        status:       Game::ABANDONED,
-        abandoned_at: Time.zone.now
-    }
+    update_columns(
+        {
+            status:       Game::ABANDONED,
+            abandoned_at: Time.zone.now
+        }
+    )
 
     true
   end
@@ -140,7 +180,7 @@ class Game < ActiveRecord::Base
   # @return [Boolean] true if game started already
   #   unless false
   def started?
-    status == Game::RUNNING && started_at.present?
+    !game_over? && status == Game::RUNNING && started_at.present?
   end
   
   alias_method :can_move?, :started?

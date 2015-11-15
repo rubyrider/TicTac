@@ -1,10 +1,11 @@
 class Board < ActiveRecord::Base
   # game reference
   belongs_to :game
-  has_many :moves
+  has_many :moves, dependent: :destroy
 
   attr_reader :row, :column, :icon
   attr_reader :winner
+  attr_reader :looser
 
   # To reset all cells of the board
   #
@@ -84,11 +85,11 @@ class Board < ActiveRecord::Base
       raise IncorrectCellPosition, 'Incorrect cell position'.freeze
     end
 
-    if row > 3 || column > 3
+    if row > 3 || column > 3 || row < 1 || column < 1
       raise OutOfCellError, 'No cell available in this zone'.freeze
     end
 
-    self.send cell_column(row, column)
+    return self.send cell_column(row, column)
   end
 
 
@@ -115,12 +116,19 @@ class Board < ActiveRecord::Base
   #
   # @return [Boolean] if anyone wins or loose
   def draw(positions)
-    positions.each do |diagonal|
+    positions.each do |position|
       # make sure win
-      if diagonal.uniq.count == 1 && !diagonal.uniq.first.nil?
-        @winner = diagonal.uniq.first
-        mark_win!
+      if position.uniq.count == 1 && !position.uniq.first.nil?
+        @winner = position.uniq.first
 
+        # finding winner and looser
+        if @winner == game.player_id
+          @looser = game.opponent_id
+        else
+          @looser = game.player_id
+        end
+
+        mark_win! if @winner
         return true
       end
     end
@@ -159,7 +167,7 @@ class Board < ActiveRecord::Base
   end
 
   # formatting json date for board
-  def as_json
+  def as_json(options = nil)
     {
         win:             self.win?,
         drawn:           self.drawn?,
@@ -215,6 +223,7 @@ class Board < ActiveRecord::Base
     return false if get_cell_value(row, column).present?
 
     self.send cell_column(row, column, false), icon
+    win? || drawn?
 
     self.save
   end
@@ -222,12 +231,31 @@ class Board < ActiveRecord::Base
   # When a winner wins a board
   #
   def mark_win!
-    game.update_status(Game::WIN)
+    # update point tables
+    if @winner && @looser
+      game.point_tables.create(winner_id: winner, looser_id: looser, started_at: game.started_at, ended_at: Time.zone.now, result: 'won')
+      game.update_status(Game::WIN)
+    end
+
+    # reset board!
+    reset_board!
+
+    # reset winner and looser histories!
+    @winner = false
+    @looser = false
+
+    true
   end
 
   # When the match is drawn
   #
   def mark_drawn!
+    # update point tables
+    game.point_tables.create(started_at: game.started_at, ended_at: Time.zone.now, result: 'Draw')
+
+    # reset board!
+    reset_board!
+
     game.update_status(Game::DRAWN)
   end
 

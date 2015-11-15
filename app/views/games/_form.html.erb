@@ -1,0 +1,38 @@
+<%= form_for(@game, html: { class: 'form-horizontal', role: 'form' }) do |f| %>
+    <% if @game.errors.any? %>
+        <div id="error_explanation">
+          <h2><%= pluralize(@game.errors.count, "error") %> prohibited this game from being saved:</h2>
+
+          <ul>
+            <% @game.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+    <% end %>
+
+    <%= f.fields_for :player do |p| %>
+        <h4>Enter information for player 1</h4>
+        <div class="form-group">
+          <%= p.label :name, class: 'col-sm-3' %>
+          <div class="col-sm-7">
+            <%= p.text_field :name, class: 'form-control' %>
+          </div>
+        </div>
+    <% end %>
+
+    <%= f.fields_for :opponent do |o| %>
+        <h4>Enter information for player 2</h4>
+        <div class="form-group">
+          <%= o.label :name, class: 'col-sm-3' %>
+          <div class="col-sm-7">
+            <%= o.text_field :name, class: 'form-control' %>
+          </div>
+        </div>
+    <% end %>
+
+
+    <div class="actions">
+      <%= f.submit 'Start Game', class: 'btn btn-primary' %>
+    </div>
+<% end %>

@@ -34,15 +34,15 @@ describe Game, type: :model do
 
     it 'gets a winner' do
       game.board.cell_view
-      expect(game.winner).to be_present
+      expect(game.point_tables.last.result).to be_present
     end
 
     it 'award a player as a winner' do
-      expect(game.winner).to be_a Player
+      expect(game.point_tables.last.winner).to be_a Player
     end
 
     it 'award to the right winner' do
-      expect(game.winner).to be == game.player
+      expect(game.point_tables.last.winner).to be == game.player
     end
   end
 
@@ -99,8 +99,11 @@ describe Game, type: :model do
           end
 
           context 'once player move is done' do
+
+            before { game.move!(move) }
+
             it 'can\'t allow the same player to make a move' do
-              expect { game.move!(move) }.to raise_error InvalidPlayerMove
+              expect(game.move!(move)).to be_falsey
             end
 
             it 'can allow opponent to move' do
@@ -115,7 +118,7 @@ describe Game, type: :model do
               end
 
               it 'can\'t allow to make another move by same player' do
-                expect { game.move!(opponent_move) }.to raise_error InvalidPlayerMove
+                expect(game.move!(opponent_move)).to be_falsey
               end
 
               describe '#as_json' do
