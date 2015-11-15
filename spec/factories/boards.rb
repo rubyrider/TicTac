@@ -19,6 +19,18 @@ FactoryGirl.define do
   # |  r1_c1 | r1_c2 | r1_c3    |
   # ----------------------------
 
+  trait :no_moves do
+    r1_c1 nil
+    r1_c2 nil
+    r1_c3 nil
+    r2_c1 nil
+    r2_c2 nil
+    r2_c3 nil
+    r3_c1 nil
+    r3_c2 nil
+    r3_c3 nil
+  end
+
   trait :winning_combination_by_rows do
     r1_c1 1
     r1_c2 1

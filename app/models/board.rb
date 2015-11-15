@@ -73,6 +73,9 @@ class Board < ActiveRecord::Base
   end
 
 
+  # For testing purposes
+  #
+  # @return [String] Cell wise views of the board
   def cell_view
     puts '---------------'
     puts "|  #{get_cell_value(3,1) || ' '} | #{get_cell_value(3,2) || ' '} | #{get_cell_value(3,3) || ' '}  |"
@@ -94,21 +97,31 @@ class Board < ActiveRecord::Base
   # @return [Boolean] if anyone wins or loose
   def draw(positions)
     positions.each do |diagonal|
-      if diagonal.uniq.count == 1
+      # make sure win
+      if diagonal.uniq.count == 1 && !diagonal.uniq.first.nil?
         @winner = diagonal.uniq.first
 
         return true
       end
     end
 
-    return false
+    false
   end
 
+  # Finding if any move available
+  #
+  # @return [Boolean] true/false based on if move available
   def move_available?
     cell_rows.flatten.select {|cell| cell.nil?}.size > 0
   end
 
+  # To find if a match is drawn
+  #
+  # @return [Boolean] true/false if a match is drawn
   def drawn?
+    # Conditions:
+    # 1. No move available
+    # 2. And no one wins
     !move_available? && !win?
   end
 

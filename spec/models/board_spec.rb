@@ -36,6 +36,13 @@ RSpec.describe Board, type: :model do
   end
 
   describe '#win?' do
+    context 'when no moves made' do
+      let!(:board_with_no_move) { create :board, :no_moves }
+
+      it 'should return false' do
+        expect(board_with_no_move.win?).to be_falsey
+      end
+    end
     context 'no one wins' do
       it 'gives correct result' do
         board.cell_view
