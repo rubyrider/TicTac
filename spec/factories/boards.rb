@@ -9,6 +9,7 @@ FactoryGirl.define do
     r3_c1 0
     r3_c2 0
     r3_c3 nil
+    game
   end
 
   # ----------------------------

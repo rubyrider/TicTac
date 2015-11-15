@@ -1,0 +1,1 @@
+class IncorrectCellPosition < StandardError; end

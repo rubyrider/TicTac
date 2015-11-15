@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151114172644) do
+ActiveRecord::Schema.define(version: 20151115110435) do
 
   create_table "boards", force: :cascade do |t|
     t.integer  "r1_c1"
@@ -32,11 +32,13 @@ ActiveRecord::Schema.define(version: 20151114172644) do
     t.string   "name"
     t.integer  "player_id"
     t.integer  "opponent_id"
-    t.integer  "result",       default: 1
+    t.integer  "result",         default: 1
     t.datetime "abandoned_at"
     t.datetime "started_at"
-    t.datetime "created_at",               null: false
-    t.datetime "updated_at",               null: false
+    t.datetime "created_at",                 null: false
+    t.datetime "updated_at",                 null: false
+    t.integer  "status",         default: 1
+    t.integer  "last_player_id"
   end
 
   add_index "games", ["opponent_id"], name: "index_games_on_opponent_id"
@@ -47,8 +49,10 @@ ActiveRecord::Schema.define(version: 20151114172644) do
     t.integer  "y_axis"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer  "board_id"
   end
 
+  add_index "moves", ["board_id"], name: "index_moves_on_board_id"
   add_index "moves", ["player_id"], name: "index_moves_on_player_id"
 
   create_table "players", force: :cascade do |t|

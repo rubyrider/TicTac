@@ -1,6 +1,7 @@
 class Board < ActiveRecord::Base
   # game reference
   belongs_to :game
+  has_many :moves
 
   # To reset all cells of the board
   #
@@ -12,6 +13,10 @@ class Board < ActiveRecord::Base
     save!
   end
 
+  # To check if the board is empty
+  #
+  # @return [Boolean] true/false based
+  #   on board condition
   def empty_board?
     cell_rows.flatten.uniq.size == 1 && cell_rows.flatten.uniq.first == nil
   end
@@ -80,7 +85,7 @@ class Board < ActiveRecord::Base
       raise OutOfCellError, 'No cell available in this zone'.freeze
     end
 
-    self.send "r#{row}_c#{column}"
+    self.send cell_column(row, column)
   end
 
 
@@ -89,9 +94,9 @@ class Board < ActiveRecord::Base
   # @return [String] Cell wise views of the board
   def cell_view
     puts '---------------'
-    puts "|  #{get_cell_value(3,1) || ' '} | #{get_cell_value(3,2) || ' '} | #{get_cell_value(3,3) || ' '}  |"
-    puts "|  #{get_cell_value(2,1) || ' '} | #{get_cell_value(2,2) || ' '} | #{get_cell_value(2,3) || ' '}  |"
-    puts "|  #{get_cell_value(1,1) || ' '} | #{get_cell_value(1,2) || ' '} | #{get_cell_value(1,3) || ' '}  |"
+    puts "|  #{get_cell_value(3, 1) || ' '} | #{get_cell_value(3, 2) || ' '} | #{get_cell_value(3, 3) || ' '}  |"
+    puts "|  #{get_cell_value(2, 1) || ' '} | #{get_cell_value(2, 2) || ' '} | #{get_cell_value(2, 3) || ' '}  |"
+    puts "|  #{get_cell_value(1, 1) || ' '} | #{get_cell_value(1, 2) || ' '} | #{get_cell_value(1, 3) || ' '}  |"
     puts '---------------'
   end
 
@@ -111,6 +116,7 @@ class Board < ActiveRecord::Base
       # make sure win
       if diagonal.uniq.count == 1 && !diagonal.uniq.first.nil?
         @winner = diagonal.uniq.first
+        mark_win!
 
         return true
       end
@@ -123,7 +129,7 @@ class Board < ActiveRecord::Base
   #
   # @return [Boolean] true/false based on if move available
   def move_available?
-    cell_rows.flatten.select {|cell| cell.nil?}.size > 0
+    cell_rows.flatten.select { |cell| cell.nil? }.size > 0
   end
 
   # To find if a match is drawn
@@ -133,10 +139,54 @@ class Board < ActiveRecord::Base
     # Conditions:
     # 1. No move available
     # 2. And no one wins
-    !move_available? && !win?
+    if !move_available? && !win?
+      mark_drawn!
+
+      return true
+    end
+
+    false
   end
 
   private
+  # Its needed to find the column name for the right position
+  #
+  # @param [Integer] row it should be in between 1 & 3
+  # @param [Integer] column it should be in between 1 & 3
+  # @param [Boolean] reader default is true, a false
+  #   value send the writer attributes
+  #   for the desire cell.
+  # @return [String] reader or writer accessor
+  def cell_column(row, column, reader = true)
+    return "r#{row}_c#{column}" if reader
+
+    "r#{row}_c#{column}="
+  end
+
+  # Performing the move on the board
+  #
+  # @see #move!
+  # @param [Integer] row represents y_axis value
+  # @param [Integer] column represents x_axis value
+  # @param [Integer] icon is the player icon
+  def make_move!(row, column, icon)
+    return false if get_cell_value(row, column).present?
+
+    self.send cell_column(row, column, false), icon
+
+    self.save
+  end
+  # When a winner wins a board
+  #
+  def mark_win!
+    game.update_status(Game::WIN)
+  end
+
+  # When the match is drawn
+  #
+  def mark_drawn!
+    game.update_status(Game::DRAWN)
+  end
 
   # To set all cells to default value
   #
@@ -152,12 +202,4 @@ class Board < ActiveRecord::Base
     self.r3_c2 = nil
     self.r3_c3 = nil
   end
-
-end
-
-class IncorrectCellPosition < StandardError
-
-end
-
-class OutOfCellError < StandardError
 end

@@ -1,0 +1,1 @@
+class InvalidPlayerMove < StandardError; end

@@ -1,0 +1,1 @@
+class OutOfCellError < StandardError; end
