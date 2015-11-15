@@ -105,12 +105,17 @@ class Board < ActiveRecord::Base
   end
 
   def move_available?
+    cell_rows.flatten.select {|cell| cell.nil?}.size > 0
+  end
 
+  def drawn?
+    !move_available? && !win?
   end
 
 end
 
 class IncorrectCellPosition < StandardError
+
 end
 
 class OutOfCellError < StandardError

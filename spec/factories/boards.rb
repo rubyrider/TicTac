@@ -35,4 +35,15 @@ FactoryGirl.define do
     r3_c3 1
   end
 
+  trait :no_move_available do
+    r3_c3 1
+    r2_c1 0
+  end
+
+  trait :no_win_and_no_move do
+    r3_c3 0
+    r3_c2 1
+    r2_c1 1
+  end
+
 end

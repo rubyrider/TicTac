@@ -70,4 +70,39 @@ RSpec.describe Board, type: :model do
       end
     end
   end
+
+  describe '#move_available?' do
+    context 'when move available' do
+      subject { board.reload.move_available? }
+
+      it { is_expected.to be_truthy }
+    end
+
+    context 'when no move available' do
+      let!(:board_with_no_move) { create :board, :no_move_available }
+
+      it 'should return false' do
+        board_with_no_move.cell_view
+
+        expect(board_with_no_move.move_available?).to be_falsey
+      end
+    end
+  end
+
+  describe '#drawn?' do
+    context 'when moves available' do
+      it 'should return false' do
+        expect(board.drawn?).to be_falsey
+      end
+    end
+
+    context 'when no move available' do
+      let!(:board_with_no_move) { create :board, :no_win_and_no_move }
+      it 'should return true' do
+        board_with_no_move.cell_view
+
+        expect(board_with_no_move.drawn?).to be_truthy
+      end
+    end
+  end
 end
