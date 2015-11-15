@@ -3,6 +3,9 @@ class Board < ActiveRecord::Base
   belongs_to :game
   has_many :moves
 
+  attr_reader :row, :column, :icon
+  attr_reader :winner
+
   # To reset all cells of the board
   #
   # @return [Boolean] true/false
@@ -169,13 +172,22 @@ class Board < ActiveRecord::Base
         r3_c1:           self.r3_c1,
         r3_c2:           self.r3_c2,
         r3_c3:           self.r3_c3,
-        view:            self.cell_view,
         moves:           self.moves,
         row_grid:        self.cell_rows,
         column_grid:     self.cell_columns,
         move_available:  self.move_available?,
         moves_available: self.total_available_moves
     }
+  end
+
+  # To perform a move on the board!
+  #
+  # @return [Boolean] true/false indicates if move
+  #   is successful or not
+  def move!(row, column, icon)
+    @row, @column, @icon = row, column, icon
+
+    make_move!
   end
 
   private
@@ -199,7 +211,7 @@ class Board < ActiveRecord::Base
   # @param [Integer] row represents y_axis value
   # @param [Integer] column represents x_axis value
   # @param [Integer] icon is the player icon
-  def make_move!(row, column, icon)
+  def make_move!
     return false if get_cell_value(row, column).present?
 
     self.send cell_column(row, column, false), icon

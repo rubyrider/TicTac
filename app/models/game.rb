@@ -15,7 +15,7 @@ class Game < ActiveRecord::Base
 
   validates :player_id, :opponent_id, :presence => true
 
-  after_initialize :initial_game_board
+  after_create :setup_game_board
 
   # To perform the move on the board
   #
@@ -23,12 +23,12 @@ class Game < ActiveRecord::Base
   def move!(move = {})
     raise GameNotStarted, 'This game is not running' unless started?
 
-    raise InvalidPlayerMove, 'This player is not authorized for this move' unless move_valid_for?(move.require(:player_id))
+    raise InvalidPlayerMove, 'This player is not authorized for this move' unless move_valid_for?(move.fetch(:player_id))
 
-    if board.make_move!(move.require(:y_axis), move.require(:x_axis), move.require(:player_id))
+    if board.move!(move.fetch(:y_axis), move.fetch(:x_axis), move.fetch(:player_id))
       self.board.moves.create!(move)
 
-      update_column(:last_player_id, move.require(:player_id))
+      update_column(:last_player_id, move.fetch(:player_id))
     else
       return false
     end
@@ -39,18 +39,19 @@ class Game < ActiveRecord::Base
   # To response game data as json
   def as_json
     {
-        id:              self.id,
-        player:          self.player,
-        opponent:        self.opponent,
-        winner:          self.last_mover,
-        last_moved_by:   last_mover,
-        next_move_id:    next_mover,
-        status:          self.current_status,
-        board:           self.board.as_json,
-        started_at:      self.started_at,
-        abandoned:       self.abandoned?,
-        abandoned_at:    self.abandoned_at,
-        created_at:      self.created_at
+        id:            self.id,
+        player:        self.player,
+        opponent:      self.opponent,
+        winner:        self.winner,
+        game_over:     self.game_over?,
+        last_moved_by: last_mover,
+        next_move_id:  next_mover,
+        status:        self.current_status,
+        board:         self.board.as_json,
+        started_at:    self.started_at,
+        abandoned:     self.abandoned?,
+        abandoned_at:  self.abandoned_at,
+        created_at:    self.created_at
     }
   end
 
@@ -58,9 +59,15 @@ class Game < ActiveRecord::Base
   #
   # @return [Player]
   def last_mover
-    if last_player_id.present?
-      Player.find(self.last_player_id)
-    end
+      Player.find(self.last_player_id) if last_player_id.present?
+  end
+
+  def winner
+    Player.find(self.board.winner) if self.board.winner.present?
+  end
+
+  def game_over?
+    win? || drawn?
   end
 
   # To find the the next mover, to select a mover
@@ -153,10 +160,18 @@ class Game < ActiveRecord::Base
     update_column :status, status_code.to_i
   end
 
+  def win?
+    status == Game::WIN
+  end
+
+  def drawn?
+    status == Game::DRAWN
+  end
+
   private
 
-  def initial_game_board
-    self.build_board
+  def setup_game_board
+    self.create_board
   end
 
   # Finding if the current move is valid for
