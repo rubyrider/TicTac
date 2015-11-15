@@ -3,6 +3,8 @@ class Board < ActiveRecord::Base
   # game reference
   belongs_to :game
 
+  attr_accessor :winner
+
   # To collect value for diagonals positions
   #
   # @return [Array] array of both diagonal array
@@ -16,33 +18,41 @@ class Board < ActiveRecord::Base
   # To get all row wise the grid values
   #
   # @return [Array] values from all grid positions
-  def rows
-    result = []
-    1.upto(2) do |row|
-      grid = []
+  def cell_rows
+    cells = []
 
-      1.upto(2) do |column|
-        grid << get_cell_value(row, column)
+    # for each row
+    1.upto(3).each do |row|
+      rows = []
+      # for each column
+      1.upto(3).each do |column|
+        rows << get_cell_value(row, column)
       end
 
-      result << grid
+      cells << rows
     end
+
+    cells
   end
 
   # To get all column wise the grid values
   #
   # @return [Array] values from all grid positions
-  def columns
-    result = []
-    1.upto(2) do |column|
+  def cell_columns
+    cells = []
+    # for each column
+    1.upto(3).each do |column|
       grid = []
 
-      1.upto(2) do |row|
-        grid << get_cell_value(column, row)
+      # for each row
+      1.upto(3).each do |row|
+        grid << get_cell_value(row, column)
       end
 
-      result << grid
+      cells << grid
     end
+
+    cells
   end
 
   # To collect a cell value
@@ -60,6 +70,32 @@ class Board < ActiveRecord::Base
     end
 
     self.send "r#{row}_c#{column}"
+  end
+
+
+  def cell_view
+    puts '---------------'
+    puts "|  #{get_cell_value(3,1) || ' '} | #{get_cell_value(3,2) || ' '} | #{get_cell_value(3,3) || ' '}  |"
+    puts "|  #{get_cell_value(2,1) || ' '} | #{get_cell_value(2,2) || ' '} | #{get_cell_value(2,3) || ' '}  |"
+    puts "|  #{get_cell_value(1,1) || ' '} | #{get_cell_value(1,2) || ' '} | #{get_cell_value(1,3) || ' '}  |"
+    puts '---------------'
+  end
+
+
+  def win?
+    draw(diagonals) || draw(cell_columns) || draw(cell_rows)
+  end
+
+  def draw(positions)
+    positions.each do |diagonal|
+      if diagonal.uniq.count == 1
+        @winner = diagonal.uniq.first
+
+        return true
+      end
+    end
+
+    return false
   end
 
 end
