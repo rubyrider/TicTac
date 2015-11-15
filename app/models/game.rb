@@ -10,9 +10,12 @@ class Game < ActiveRecord::Base
   belongs_to :player
   # opponent reference
   belongs_to :opponent, class_name: 'Player', foreign_key: :opponent_id
-
   # board for a game
   has_one :board
+
+  validates :player_id, :opponent_id, :presence => true
+
+  after_initialize :initial_game_board
 
   # To perform the move on the board
   #
@@ -103,7 +106,7 @@ class Game < ActiveRecord::Base
 
     update_columns(
         {
-            status:     Board::RUNNING,
+            status:     Game::RUNNING,
             started_at: Time.zone.now
         }
     )
@@ -118,7 +121,7 @@ class Game < ActiveRecord::Base
     return true if abandoned?
 
     {
-        status:       Board::ABANDONED,
+        status:       Game::ABANDONED,
         abandoned_at: Time.zone.now
     }
 
@@ -130,15 +133,17 @@ class Game < ActiveRecord::Base
   # @return [Boolean] true if game started already
   #   unless false
   def started?
-    status == Board::RUNNING && started_at.present?
+    status == Game::RUNNING && started_at.present?
   end
+  
+  alias_method :can_move?, :started?
 
   # if the game has left abandoned
   #
   # @return [Boolean] true if game started already
   #   unless false
   def abandoned?
-    status == Board::ABANDONED && abandoned_at.present?
+    status == Game::ABANDONED && abandoned_at.present?
   end
 
 
@@ -149,6 +154,10 @@ class Game < ActiveRecord::Base
   end
 
   private
+
+  def initial_game_board
+    self.build_board
+  end
 
   # Finding if the current move is valid for
   #   specific player
