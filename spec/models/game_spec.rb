@@ -27,6 +27,25 @@ describe Game, type: :model do
     end
   end
 
+  context 'when having a result' do
+    let!(:game) { create(:game, winning_game: true) }
+
+    before { game.board.win? }
+
+    it 'gets a winner' do
+      game.board.cell_view
+      expect(game.winner).to be_present
+    end
+
+    it 'award a player as a winner' do
+      expect(game.winner).to be_a Player
+    end
+
+    it 'award to the right winner' do
+      expect(game.winner).to be == game.player
+    end
+  end
+
   describe '#start!' do
     context 'before started' do
       it 'can\'t move' do
@@ -119,22 +138,5 @@ describe Game, type: :model do
     end
   end
 
-  context 'winning game' do
-    let!(:game) { create(:game, winning_game: true) }
-
-    before { game.board.win? }
-
-    it 'has a winner' do
-      expect(game.winner).to be_present
-    end
-
-    it 'award a player as a winner' do
-      expect(game.winner).to be_a Player
-    end
-
-    it 'award the right winner' do
-      expect(game.winner).to be == game.player
-    end
-  end
 
 end
