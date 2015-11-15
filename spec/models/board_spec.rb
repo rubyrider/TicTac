@@ -47,7 +47,7 @@ RSpec.describe Board, type: :model do
       let!(:board) { create(:board, :winning_combination_by_diagonals) }
 
       it 'gives correct result' do
-        board.cell_view
+        board.reload.cell_view
         expect(board.win?).to be == true
       end
     end

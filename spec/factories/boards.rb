@@ -32,7 +32,7 @@ FactoryGirl.define do
   end
 
   trait :winning_combination_by_diagonals do
-    r3_c3 0
+    r3_c3 1
   end
 
 end

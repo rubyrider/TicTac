@@ -82,10 +82,16 @@ class Board < ActiveRecord::Base
   end
 
 
+  # Finding winner
+  #
+  # @return [Boolean] if this game is win mode
   def win?
     draw(diagonals) || draw(cell_columns) || draw(cell_rows)
   end
 
+  # Finding game result
+  #
+  # @return [Boolean] if anyone wins or loose
   def draw(positions)
     positions.each do |diagonal|
       if diagonal.uniq.count == 1
@@ -96,6 +102,10 @@ class Board < ActiveRecord::Base
     end
 
     return false
+  end
+
+  def move_available?
+
   end
 
 end
