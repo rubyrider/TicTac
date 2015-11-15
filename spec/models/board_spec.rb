@@ -112,4 +112,47 @@ RSpec.describe Board, type: :model do
       end
     end
   end
+
+  describe 'empty_board?' do
+    context 'when no move' do
+      let!(:board) { create :board, :no_moves }
+      subject { board.empty_board? }
+
+      it 'should be true' do
+        board.cell_view
+
+        expect(board.empty_board?).to be_truthy
+      end
+    end
+
+    context 'when move available' do
+      let!(:board) { create :board, :winning_combination_by_columns }
+      subject { board.empty_board? }
+
+      it 'should be false' do
+        board.cell_view
+
+        expect(board.empty_board?).to be_falsey
+      end
+    end
+  end
+  
+  describe '#reset_board!' do
+    let!(:board) { create :board, :winning_combination_by_columns }
+    
+    context 'before reset' do 
+      it 'should have cell values' do 
+        expect(board.empty_board?).to be_falsey
+      end
+    end
+    
+    context 'after reset' do 
+      before { board.reset_board! }
+      
+      it 'should be an empty board' do 
+        expect(board.reload.empty_board?).to be_truthy
+      end
+    end
+
+  end
 end

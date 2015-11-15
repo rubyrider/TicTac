@@ -1,9 +1,20 @@
 class Board < ActiveRecord::Base
-
   # game reference
   belongs_to :game
 
-  attr_accessor :winner
+  # To reset all cells of the board
+  #
+  # @return [Boolean] true/false
+  def reset_board!
+    return true if empty_board?
+
+    reset_board
+    save!
+  end
+
+  def empty_board?
+    cell_rows.flatten.uniq.size == 1 && cell_rows.flatten.uniq.first == nil
+  end
 
   # To collect value for diagonals positions
   #
@@ -123,6 +134,23 @@ class Board < ActiveRecord::Base
     # 1. No move available
     # 2. And no one wins
     !move_available? && !win?
+  end
+
+  private
+
+  # To set all cells to default value
+  #
+  def reset_board
+    # append nil to all cells to reset
+    self.r1_c1 = nil
+    self.r1_c2 = nil
+    self.r1_c3 = nil
+    self.r2_c1 = nil
+    self.r2_c2 = nil
+    self.r2_c3 = nil
+    self.r3_c1 = nil
+    self.r3_c2 = nil
+    self.r3_c3 = nil
   end
 
 end
