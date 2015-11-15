@@ -1,0 +1,1 @@
+class PlayerNotSelected < StandardError; end

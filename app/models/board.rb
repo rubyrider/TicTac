@@ -129,7 +129,14 @@ class Board < ActiveRecord::Base
   #
   # @return [Boolean] true/false based on if move available
   def move_available?
-    cell_rows.flatten.select { |cell| cell.nil? }.size > 0
+    total_available_moves > 0
+  end
+
+  # Collecting empty cells
+  #
+  # @return [Integer] number of available moves
+  def total_available_moves
+    cell_rows.flatten.select { |cell| cell.nil? }.size
   end
 
   # To find if a match is drawn
@@ -146,6 +153,29 @@ class Board < ActiveRecord::Base
     end
 
     false
+  end
+
+  # formatting json date for board
+  def as_json
+    {
+        win:             self.win?,
+        drawn:           self.drawn?,
+        r1_c1:           self.r1_c1,
+        r1_c2:           self.r1_c2,
+        r1_c3:           self.r1_c3,
+        r2_c1:           self.r2_c1,
+        r2_c2:           self.r2_c2,
+        r2_c3:           self.r2_c3,
+        r3_c1:           self.r3_c1,
+        r3_c2:           self.r3_c2,
+        r3_c3:           self.r3_c3,
+        view:            self.cell_view,
+        moves:           self.moves,
+        row_grid:        self.cell_rows,
+        column_grid:     self.cell_columns,
+        move_available:  self.move_available?,
+        moves_available: self.total_available_moves
+    }
   end
 
   private
@@ -176,6 +206,7 @@ class Board < ActiveRecord::Base
 
     self.save
   end
+
   # When a winner wins a board
   #
   def mark_win!

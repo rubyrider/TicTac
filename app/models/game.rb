@@ -20,16 +20,57 @@ class Game < ActiveRecord::Base
   def move!(move = {})
     raise GameNotStarted, 'This game is not running' unless started?
 
-    raise InvalidPlayerMove, 'This player is not authorized for this move' unless
-        move_valid_for?(move.require(:player_id))
+    raise InvalidPlayerMove, 'This player is not authorized for this move' unless move_valid_for?(move.require(:player_id))
 
-    if  board.make_move!(move.require(:y_axis), move.require(:x_axis), move.require(:player_id))
+    if board.make_move!(move.require(:y_axis), move.require(:x_axis), move.require(:player_id))
       self.board.moves.create!(move)
 
       update_column(:last_player_id, move.require(:player_id))
     else
-
+      return false
     end
+
+    true
+  end
+
+  # To response game data as json
+  def as_json
+    {
+        id:              self.id,
+        player:          self.player,
+        opponent:        self.opponent,
+        winner:          self.last_mover,
+        last_moved_by:   last_mover,
+        next_move_id:    next_mover,
+        status:          self.current_status,
+        board:           self.board.as_json,
+        started_at:      self.started_at,
+        abandoned:       self.abandoned?,
+        abandoned_at:    self.abandoned_at,
+        created_at:      self.created_at
+    }
+  end
+
+  # the last mover to valid whose move should be now!
+  #
+  # @return [Player]
+  def last_mover
+    if last_player_id.present?
+      Player.find(self.last_player_id)
+    end
+  end
+
+  # To find the the next mover, to select a mover
+  #
+  # @return [Player] player who can make the next move
+  def next_mover
+    # if no move has made yet!
+    return [player, opponent].sample unless last_player_id.present?
+    # if opponent was not the last mover
+    return opponent if last_mover != opponent
+
+    # if player wasn't the last mover
+    player if last_mover != player
   end
 
   # To get current game status
@@ -57,6 +98,8 @@ class Game < ActiveRecord::Base
   # @return [Boolean] true/false if game starting is done
   def start!
     return false if started?
+
+    raise PlayerNotSelected, 'Both player and opponent is required' if player.nil? || opponent.nil?
 
     update_columns(
         {
@@ -114,11 +157,7 @@ class Game < ActiveRecord::Base
   #    of the player to to be validated
   # @return [Boolean] true/false if the move is valid
   def move_valid_for?(player_id)
-    if last_player_id == player_id
-      errors.add :base, 'not a valid move for current player'
-
-      return false
-    end
+    return false if last_player_id == player_id
 
     true
   end
