@@ -26,7 +26,7 @@ RSpec.describe GamesController, type: :controller do
     before { get :show, { :id => game.to_param } }
 
     it 'assigns the requested game as @game' do
-      expect(assigns(:game)).to eq(game)
+      expect(assigns(:game).source).to eq(game)
     end
   end
 
