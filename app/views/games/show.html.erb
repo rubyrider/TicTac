@@ -1,18 +1,22 @@
 <div class="col-xs-12">
   <div class="alert alert-info">
-    Match: <%= @game.player.name %> VS <%= @game.opponent.name %>
+    <h3>Last Winner: <%= @game.last_match_winner %></h3>
+    Match: <%= @game.player_name %>&nbsp;<%= @game.get_player_icon(@game.player.id) %> VS <%= @game.opponent_name %>&nbsp;<%= @game.get_player_icon(@game.opponent.id) %>
+    <p>Move History (<%= @game.total_moves %>)</p>
+    <p>Move Available (<%= @game.available_moves %>)</p>
+    <hr />
   </div>
   <div class="alert alert-warning">
-    Current Turn: <%= @game.current_mover.name %>
+    Current Turn: <%= @game.current_turner%>
   </div>
   <br>
   <% 1.upto(3).each do |row| %>
       <% 1.upto(3).each do |col| %>
           <div class="col-xs-4 cell">
             <% if @game.board.get_cell_value(row, col) %>
-                <%= @game.board.get_cell_value(row, col) %>
+                <%= @game.player_icon(row, col) %>
             <% else %>
-                <%= form_for(@game, url: move_game_path, method: :post, as: :move) do |f| %>
+                <%= form_for(@game.source, url: move_game_path, method: :post, as: :move) do |f| %>
                     <%= f.hidden_field :y_axis, value: row %>
                     <%= f.hidden_field :x_axis, value: col %>
                     <%= f.submit 'Select', class: 'btn btn-primary' %>
@@ -26,17 +30,15 @@
 <%= content_for :moves do %>
     <h4><span class="label label-info">
         <i class="glyphicon glyphicon-bell"></i>
-      <%= @game.current_status %></span>
+      <%= @game.source.current_status %></span>
     </h4>
-    <% if !@game.started? %>
-        <%= link_to 'Start Now!', start_game_path, class: 'btn btn-warning' %>
+    <% if !@game.source.started? %>
+        <%= link_to 'Start Now!', start_game_path, class: 'btn btn-warning', style: 'border-bottom: 20px' %>
     <% end %>
     <br>
     <div class="panel panel-default">
       <div class="page-header">
-        <h5 class="panel-heading">Move History (<%= @game.board.moves.count %>)</h5>
-
-        <p class="panel-heading">Move Available (<%= @game.board.total_available_moves %>)</p>
+        <h3 class="panel-heading">Game Details</h3>
       </div>
       <div class="panel-body">
         <h3>Leader Board</h3>
@@ -54,17 +56,23 @@
                   <%= i.next %>
                 </td>
                 <td>
-                  <%= point_table.winner.try(:name) || '-' %>&nbsp;(<%= point_table.winner.try(:id) || '-' %>)
+                  <%= point_table.winner_name %>
                 </td>
                 <td>
-                  <%= point_table.looser.try(:name) || '-' %>
+                  <%= point_table.looser_name %>
                 </td>
                 <td>
-                  <%= point_table.result || '-' %>
+                  <%= point_table.result %>
                 </td>
               </tr>
           <% end %>
         </table>
+        <h3>Move History</h3>
+        <ol>
+          <% @game.moves.each do |move|  %>
+              <li><%= move.player_name %></li>&nbsp;moved to: <%= move.moved_to %>
+          <% end %>
+        </ol>
       </div>
     </div>
 <% end %>

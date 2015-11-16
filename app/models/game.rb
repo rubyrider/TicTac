@@ -45,6 +45,7 @@ class Game < ActiveRecord::Base
     raise InvalidPlayerMove, 'this player is not authorized for this move' unless move_valid_for?(current_mover.id)
 
     if board.move!(move.fetch(:y_axis).to_i, move.fetch(:x_axis).to_i, current_mover.id)
+      move.merge!(player_id: current_mover.id)
       self.board.moves.create!(move)
 
       update_columns({last_player_id: current_mover.id})

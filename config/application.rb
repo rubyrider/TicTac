@@ -32,5 +32,6 @@ module Tictac
     config.active_record.raise_in_transactional_callbacks = true
 
     config.autoload_paths << "#{Rails.root}/app/errors"
+    config.autoload_paths << "#{Rails.root}/app/services"
   end
 end
